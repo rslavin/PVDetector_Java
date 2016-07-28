@@ -1,6 +1,8 @@
 package edu.utsa.cs.privacy.violation;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -16,48 +18,42 @@ public class DetectionMain {
     private static final String API_FLOW_PATH = "C:/personal/ASE15_Privacy/newout_All/ApiFlow-All";
     //path to oracle file, need only for evaluation
     private static final String ORACLE_PATH = "C:/personal/ASE15_Privacy/data/violation_oracle.txt";
-    //The path to the ontology file
-    public static String TREE_PATH = "C:/personal/ASE15_Privacy/newout_All/study_utsa_resolved_words_Mitra-reconciled-w-round2-Final.owl";
-    //The path to the API map file
-    public static String API_MAP_PATH = "C:/personal/ASE15_Privacy/data/map_real_" + SusiOnly + ".txt";
-    //path to the policies
-    public static String POLICY_PATH = "C:/personal/ASE15_Privacy/data/policy_target_search";
-    //path to output statistical files for each app
-    public static String OUT_PATH = "C:/personal/ASE15_Privacy/data/ViolationOut";
+
     //path to output all violations
     public static String REPORT_PATH = "C:/personal/ASE15_Privacy/data/Violation.report";
 
 
     public static void main(String args[]) throws IOException, MultiOrNoRootException {
-        ViolationDetector detector = new ViolationDetector(API_MAP_PATH,
-                TREE_PATH);
-        Hashtable<String, List<Violation>> finalResults = new Hashtable<String, List<Violation>>();
-        File policyPath = new File(POLICY_PATH);
-        PrintWriter pw = new PrintWriter(new FileWriter(REPORT_PATH));
-        int count = 0;
-        for (String name : policyPath.list()) {
-            count = count + 1;
-            String rootname = name.substring(0, name.length() - 4);
-            if (!(new File(API_FLOW_PATH + "/" + rootname + ".apk.log").exists())) {
-                continue;
-            }
-            List<Violation> violations = detector.detect(POLICY_PATH + "/"
-                            + name, API_FLOW_PATH + "/" + rootname + ".apk.log",
-                    rootname, true);
-            if (violations.size() > 0) {
-                for (Violation v : violations) {
-                    pw.println(name + "\t" + v.toString());
-                }
-                finalResults.put(rootname, violations);
-            }
+        // TODO use a CLI to parse inputs
+        if (args.length != 4) {
+            System.err.println("Usage: PVDetector <owl file> <mapping file> <policy file> <flowdroid output>");
+            return;
         }
-        pw.close();
 
-        //The code below are for oracle checking and statistics to get the data for the paper
-        List<Violation> oracles = loadOracle(ORACLE_PATH);
-        printStats(finalResults);
-        checkOracles(finalResults, oracles);
-        getTops(finalResults, oracles);
+        //The path to the ontology file
+        String owlFile = args[0];
+        //The path to the API map file
+        String mappingFile = args[1];
+        //path to the policies
+        String policyFile = args[2];
+        // output from flowdroid
+        String flowDroidOut = args[3];
+        //path to output statistical files for each app
+
+
+        ViolationDetector detector = new ViolationDetector(mappingFile, owlFile);
+        Path p = Paths.get(policyFile);
+        String name = p.getFileName().toString();
+        List<Violation> violations = detector.detect(policyFile, flowDroidOut,
+                name, true);
+        if (violations.size() > 0) {
+            for (Violation v : violations) {
+                System.out.println(v);
+            }
+        }else{
+            System.out.println("No violations detected");
+        }
+
     }
 
     private static void checkOracles(
@@ -290,11 +286,11 @@ public class DetectionMain {
      * @param results
      * @throws IOException
      */
-    public static void printStats(Hashtable<String, List<Violation>> results)
+   /* public static void printStats(Hashtable<String, List<Violation>> results)
             throws IOException {
-        PrintWriter apps = new PrintWriter(new FileWriter(OUT_PATH
+        PrintWriter apps = new PrintWriter(new FileWriter(outPath
                 + "/vioApps-exp.txt"));
-        PrintWriter apis = new PrintWriter(new FileWriter(OUT_PATH
+        PrintWriter apis = new PrintWriter(new FileWriter(outPath
                 + "/vioAPIs-exp.txt"));
 
         Set<String> apiset = new HashSet<String>();
@@ -336,5 +332,5 @@ public class DetectionMain {
         }
         apis.close();
         apps.close();
-    }
+    }*/
 }

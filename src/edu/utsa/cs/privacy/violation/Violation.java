@@ -41,12 +41,22 @@ public class Violation {
 	return false;
     }
 
-    public String toString(){
+    public String toStringOld(){
 	if(this.type == ViolationType.EXPLICIT){
 	    return this.type + "\t" + this.api + "\tMissing" + this.missingPhrases;
 	}else{
 	    return this.type + "\t" + this.api + "\tMissing:" + this.missingPhrases + "\tGiven:" + this.abstractPhrase;
 	}
+    }
+
+    public String toString(){
+        String typeString = "VIOLATION TYPE: ";
+        if(this.type == ViolationType.EXPLICIT){
+            typeString += "Strong\nMISSING PHRASE(S): " + this.missingPhrases;
+        }else{
+            typeString += "Weak\nMISSING PHRASE(S): " + this.missingPhrases + "\nGIVEN: " + this.abstractPhrase;
+        }
+        return "METHOD CALLED: " + getApi() + typeString + "\n----------------------------";
     }
     
     public String toStringWithName(){
